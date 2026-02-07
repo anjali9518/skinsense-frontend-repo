@@ -1,13 +1,7 @@
 import { motion } from "framer-motion";
-import { Eye, Search, Stethoscope, Sun, ShieldAlert, CircleDot, Scaling, Palette, Move } from "lucide-react";
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 30 },
-  visible: (i: number) => ({
-    opacity: 1, y: 0,
-    transition: { delay: i * 0.1, duration: 0.5, ease: [0, 0, 0.2, 1] as const },
-  }),
-};
+import { Eye, Search, Stethoscope, Sun, ShieldAlert, CircleDot, Scaling, Palette, Move, BookOpen, ChevronRight } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 const skinCancer101 = [
   { title: "What Is Skin Cancer?", desc: "Skin cancer is the abnormal growth of skin cells, most often caused by ultraviolet (UV) radiation from the sun or tanning beds." },
@@ -22,9 +16,9 @@ const earlyDetection = [
 ];
 
 const abcde = [
-  { letter: "A", label: "Asymmetry", icon: Scaling, desc: "One half doesn't match the other half." },
+  { letter: "A", label: "Asymmetry", icon: Scaling, desc: "One half doesn't match the other half in shape." },
   { letter: "B", label: "Border", icon: CircleDot, desc: "Irregular, ragged, notched, or blurred edges." },
-  { letter: "C", label: "Color", icon: Palette, desc: "Uneven color—shades of brown, black, tan, red, white, or blue." },
+  { letter: "C", label: "Color", icon: Palette, desc: "Uneven color — shades of brown, black, tan, red, white, or blue." },
   { letter: "D", label: "Diameter", icon: Sun, desc: "Larger than 6mm (about the size of a pencil eraser)." },
   { letter: "E", label: "Evolving", icon: Move, desc: "A mole that is changing in size, shape, or color over time." },
 ];
@@ -42,28 +36,49 @@ const prevention = [
 
 export default function Learn() {
   return (
-    <main className="pt-24 pb-16 min-h-screen bg-background">
+    <main className="pt-24 pb-16 min-h-screen relative">
       <div className="container mx-auto px-4 max-w-5xl">
         {/* Header */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-16">
-          <p className="text-sm text-primary font-semibold uppercase tracking-wider mb-2">Education</p>
-          <h1 className="text-4xl md:text-5xl font-bold font-display mb-3">
-            Learn About <span className="text-gradient">Skin Cancer</span>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-20"
+        >
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass text-xs text-primary mono mb-4">
+            <BookOpen className="h-3 w-3" /> Education Center
+          </div>
+          <h1 className="text-4xl md:text-6xl font-bold font-display mb-4 leading-tight">
+            Learn About{" "}
+            <span className="text-gradient glow-text">Skin Cancer</span>
           </h1>
-          <p className="text-muted-foreground max-w-2xl">
-            Everything you need to know about skin cancer—from identification and prevention to early detection.
+          <p className="text-muted-foreground max-w-2xl text-lg">
+            Everything you need to know — from identification and prevention to early detection.
           </p>
         </motion.div>
 
         {/* 101 */}
-        <section className="mb-20">
-          <motion.h2 initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0} className="text-2xl font-bold font-display mb-8">
-            Skin Cancer 101
-          </motion.h2>
-          <div className="grid md:grid-cols-3 gap-6">
+        <section className="mb-24">
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="line-decoration mb-8 pl-0"
+          >
+            <p className="text-xs uppercase tracking-[0.3em] text-primary mono mb-1 pt-5">Fundamentals</p>
+            <h2 className="text-2xl md:text-3xl font-bold font-display">Skin Cancer 101</h2>
+          </motion.div>
+
+          <div className="grid md:grid-cols-3 gap-5">
             {skinCancer101.map((item, i) => (
-              <motion.div key={item.title} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={i + 1} className="rounded-2xl bg-card border border-border p-6 hover:shadow-glow transition-shadow">
-                <h3 className="font-semibold font-display mb-2 text-lg">{item.title}</h3>
+              <motion.div
+                key={item.title}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="rounded-2xl surface-elevated border-glow card-shine p-7 group"
+              >
+                <h3 className="font-semibold font-display text-lg mb-3 group-hover:text-primary transition-colors">{item.title}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
               </motion.div>
             ))}
@@ -71,14 +86,28 @@ export default function Learn() {
         </section>
 
         {/* Early Detection */}
-        <section className="mb-20">
-          <motion.h2 initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0} className="text-2xl font-bold font-display mb-8">
-            Early Detection
-          </motion.h2>
-          <div className="grid md:grid-cols-3 gap-6">
+        <section className="mb-24">
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="line-decoration mb-8"
+          >
+            <p className="text-xs uppercase tracking-[0.3em] text-primary mono mb-1 pt-5">Save Your Life</p>
+            <h2 className="text-2xl md:text-3xl font-bold font-display">Early Detection</h2>
+          </motion.div>
+
+          <div className="grid md:grid-cols-3 gap-5">
             {earlyDetection.map((item, i) => (
-              <motion.div key={item.title} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={i + 1} className="text-center rounded-2xl bg-card border border-border p-8">
-                <div className="w-14 h-14 mx-auto rounded-full bg-accent flex items-center justify-center mb-4">
+              <motion.div
+                key={item.title}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="text-center rounded-2xl surface-elevated border-glow p-8 group"
+              >
+                <div className="w-16 h-16 mx-auto rounded-2xl glass flex items-center justify-center mb-5 group-hover:glow-sm transition-all duration-500">
                   <item.icon className="h-7 w-7 text-accent-foreground" />
                 </div>
                 <h3 className="font-semibold font-display mb-2">{item.title}</h3>
@@ -89,45 +118,91 @@ export default function Learn() {
         </section>
 
         {/* ABCDE */}
-        <section className="mb-20">
-          <motion.h2 initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0} className="text-2xl font-bold font-display mb-8">
-            The ABCDEs of Skin Cancer
-          </motion.h2>
-          <div className="space-y-4">
+        <section className="mb-24">
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="line-decoration mb-8"
+          >
+            <p className="text-xs uppercase tracking-[0.3em] text-primary mono mb-1 pt-5">Warning Signs</p>
+            <h2 className="text-2xl md:text-3xl font-bold font-display">The ABCDEs of Skin Cancer</h2>
+          </motion.div>
+
+          <div className="space-y-3">
             {abcde.map((item, i) => (
-              <motion.div key={item.letter} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={i + 1} className="flex items-start gap-5 rounded-xl bg-card border border-border p-5 hover:shadow-glow transition-shadow">
-                <div className="w-12 h-12 rounded-xl bg-gradient-primary flex items-center justify-center shrink-0">
-                  <span className="text-xl font-bold text-primary-foreground font-display">{item.letter}</span>
+              <motion.div
+                key={item.letter}
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.08 }}
+                className="flex items-center gap-5 rounded-xl surface-elevated border-glow card-shine p-5 group hover:translate-x-1 transition-transform duration-300"
+              >
+                <div className="w-14 h-14 rounded-xl bg-gradient-primary flex items-center justify-center shrink-0 group-hover:glow-sm transition-all duration-500">
+                  <span className="text-2xl font-bold text-primary-foreground font-display">{item.letter}</span>
                 </div>
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-0.5">
                     <item.icon className="h-4 w-4 text-primary" />
                     <h3 className="font-semibold font-display">{item.label}</h3>
                   </div>
                   <p className="text-sm text-muted-foreground">{item.desc}</p>
                 </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground/30 group-hover:text-primary/60 transition-colors shrink-0" />
               </motion.div>
             ))}
           </div>
         </section>
 
         {/* Prevention */}
-        <section className="mb-10">
-          <motion.h2 initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0} className="text-2xl font-bold font-display mb-2">
-            Prevention Tips
-          </motion.h2>
-          <motion.p initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={1} className="text-muted-foreground mb-8">
-            Protect yourself with a complete approach to reducing UV exposure.
-          </motion.p>
-          <div className="grid sm:grid-cols-2 gap-4">
+        <section className="mb-24">
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="line-decoration mb-8"
+          >
+            <p className="text-xs uppercase tracking-[0.3em] text-primary mono mb-1 pt-5">Stay Safe</p>
+            <h2 className="text-2xl md:text-3xl font-bold font-display">Prevention Tips</h2>
+          </motion.div>
+
+          <div className="grid sm:grid-cols-2 gap-3">
             {prevention.map((tip, i) => (
-              <motion.div key={i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={i + 2} className="flex items-start gap-3 rounded-xl bg-card border border-border p-4">
-                <ShieldAlert className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                <p className="text-sm text-muted-foreground">{tip}</p>
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.05 }}
+                className="flex items-start gap-3 rounded-xl surface-elevated border-glow p-4 group"
+              >
+                <div className="w-6 h-6 rounded-md bg-accent flex items-center justify-center shrink-0 mt-0.5">
+                  <ShieldAlert className="h-3.5 w-3.5 text-accent-foreground" />
+                </div>
+                <p className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">{tip}</p>
               </motion.div>
             ))}
           </div>
         </section>
+
+        {/* CTA */}
+        <motion.section
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="rounded-2xl glass glow p-12 text-center"
+        >
+          <h2 className="text-2xl md:text-3xl font-bold font-display mb-3">
+            Ready to Check Your Skin?
+          </h2>
+          <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+            Use our AI-powered tool to analyze your skin lesions instantly.
+          </p>
+          <Button asChild variant="glow" size="lg">
+            <Link to="/skinsense">Start Scan</Link>
+          </Button>
+        </motion.section>
       </div>
     </main>
   );
