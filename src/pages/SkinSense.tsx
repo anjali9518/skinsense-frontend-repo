@@ -1,7 +1,11 @@
 import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Upload, ImagePlus, CheckCircle2, XCircle, AlertTriangle, Trash2, Sparkles, ArrowRight } from "lucide-react";
+import { Upload, ImagePlus, CheckCircle2, XCircle, AlertTriangle, Trash2, Sparkles, ArrowRight, AlertCircle, Activity, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { apiService } from "@/services/api.service";
+import { validateFile, API_CONFIG } from "@/config/api";
+import type { AnalysisResult, UploadProgress } from "@/types/api.types";
 
 const guidelines = {
   dos: [
@@ -23,10 +27,23 @@ export default function SkinSense() {
   const [preview, setPreview] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
+  const [result, setResult] = useState<AnalysisResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFile = useCallback((f: File) => {
+    // Validate file before processing
+    const validation = validateFile(f);
+    if (!validation.valid) {
+      toast.error(validation.error);
+      return;
+    }
+
     setFile(f);
+    setResult(null); // Clear previous results
+    setError(null); // Clear previous errors
+    
     const reader = new FileReader();
     reader.onload = (e) => setPreview(e.target?.result as string);
     reader.readAsDataURL(f);
@@ -42,9 +59,56 @@ export default function SkinSense() {
     [handleFile]
   );
 
-  const handleAnalyze = () => {
+  const handleAnalyze = async () => {
+    if (!file) return;
+
     setAnalyzing(true);
-    setTimeout(() => setAnalyzing(false), 3000);
+    setError(null);
+    setResult(null);
+    setUploadProgress(0);
+
+    try {
+      // Call the API to analyze the image
+      const analysisResult = await apiService.analyzeImage(
+        file,
+        (progress: UploadProgress) => {
+          setUploadProgress(progress.percentage);
+        }
+      );
+
+      if (analysisResult.success) {
+        setResult(analysisResult);
+        toast.success('Analysis complete!', {
+          description: `Diagnosis: ${analysisResult.diagnosis}`,
+        });
+      } else {
+        const errorMsg = 'Analysis failed. Please try again.';
+        setError(errorMsg);
+        toast.error(errorMsg);
+      }
+    } catch (err: any) {
+      const errorMessage = err.message || 'Failed to analyze image. Please try again.';
+      setError(errorMessage);
+      toast.error('Analysis Failed', {
+        description: errorMessage,
+      });
+      console.error('Analysis error:', err);
+    } finally {
+      setAnalyzing(false);
+      setUploadProgress(0);
+    }
+  };
+
+  const handleReset = () => {
+    setFile(null);
+    setPreview(null);
+    setResult(null);
+    setError(null);
+    setUploadProgress(0);
+  };
+
+  const getSeverityColors = (severity: string) => {
+    return API_CONFIG.SEVERITY_COLORS[severity as keyof typeof API_CONFIG.SEVERITY_COLORS] || API_CONFIG.SEVERITY_COLORS.moderate;
   };
 
   return (
@@ -175,7 +239,7 @@ export default function SkinSense() {
                             transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                             className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full"
                           />
-                          Analyzing...
+                          {uploadProgress > 0 ? `Uploading ${uploadProgress}%` : 'Analyzing...'}
                         </>
                       ) : (
                         <>
@@ -183,11 +247,12 @@ export default function SkinSense() {
                         </>
                       )}
                     </Button>
-                    {file && (
+                    {file && !analyzing && (
                       <Button
                         variant="outline"
                         size="icon"
-                        onClick={(e) => { e.stopPropagation(); setFile(null); setPreview(null); }}
+                        onClick={handleReset}
+                        title="Clear"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -195,6 +260,149 @@ export default function SkinSense() {
                   </div>
                 </div>
               </div>
+
+              {/* Error Display */}
+              <AnimatePresence>
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="rounded-xl glass border-destructive/30 p-4 flex items-start gap-3"
+                  >
+                    <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-destructive mb-1">Analysis Error</p>
+                      <p className="text-xs text-muted-foreground">{error}</p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Results Display */}
+              <AnimatePresence>
+                {result && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 20 }}
+                    className="space-y-4 pt-4 border-t border-border/50"
+                  >
+                    {/* Result Header */}
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-bold font-display text-lg flex items-center gap-2">
+                        <Activity className="h-5 w-5 text-primary" />
+                        Analysis Results
+                      </h3>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleReset}
+                      >
+                        New Analysis
+                      </Button>
+                    </div>
+
+                    {/* Diagnosis Card */}
+                    <div className={`rounded-xl p-6 border-2 ${getSeverityColors(result.severity).border} ${getSeverityColors(result.severity).bg} shadow-lg ${getSeverityColors(result.severity).glow}`}>
+                      <div className="flex items-start justify-between mb-4">
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1 mono">DIAGNOSIS</p>
+                          <h4 className={`text-2xl font-bold font-display ${getSeverityColors(result.severity).text}`}>
+                            {result.diagnosis}
+                          </h4>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xs text-muted-foreground mb-1 mono">CONFIDENCE</p>
+                          <p className={`text-2xl font-bold font-display ${getSeverityColors(result.severity).text}`}>
+                            {(result.confidence * 100).toFixed(1)}%
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${getSeverityColors(result.severity).bg} ${getSeverityColors(result.severity).text} border ${getSeverityColors(result.severity).border}`}>
+                        <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                        {result.severity.toUpperCase()} SEVERITY
+                      </div>
+                    </div>
+
+                    {/* Uploaded Image */}
+                    {result.image && (
+                      <div className="rounded-xl overflow-hidden border border-border">
+                        <img
+                          src={apiService.getImageUrl(result.image.filename)}
+                          alt="Analyzed skin lesion"
+                          className="w-full h-auto"
+                          onError={(e) => {
+                            // Fallback if API image fails
+                            e.currentTarget.src = preview || '';
+                          }}
+                        />
+                      </div>
+                    )}
+
+                    {/* Description */}
+                    <div className="rounded-xl glass p-4">
+                      <div className="flex items-start gap-3">
+                        <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-sm font-semibold mb-2">Description</p>
+                          <p className="text-xs text-muted-foreground leading-relaxed">
+                            {result.description}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Recommendation */}
+                    <div className={`rounded-xl p-4 border ${getSeverityColors(result.severity).border} ${getSeverityColors(result.severity).bg}`}>
+                      <div className="flex items-start gap-3">
+                        <AlertTriangle className={`h-4 w-4 shrink-0 mt-0.5 ${getSeverityColors(result.severity).text}`} />
+                        <div>
+                          <p className="text-sm font-semibold mb-2">Recommendation</p>
+                          <p className="text-xs text-muted-foreground leading-relaxed">
+                            {result.recommendation}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* All Probabilities (Collapsible) */}
+                    <details className="rounded-xl glass overflow-hidden">
+                      <summary className="px-4 py-3 cursor-pointer hover:bg-secondary/30 transition-colors flex items-center justify-between">
+                        <span className="text-sm font-semibold">View All Probabilities</span>
+                        <span className="text-xs text-muted-foreground mono">
+                          {Object.keys(result.probabilities).length} classes
+                        </span>
+                      </summary>
+                      <div className="px-4 pb-4 pt-2 space-y-2">
+                        {Object.entries(result.probabilities)
+                          .sort(([, a], [, b]) => b - a)
+                          .map(([className, probability]) => (
+                            <div key={className} className="flex items-center gap-3">
+                              <div className="flex-1">
+                                <div className="flex items-center justify-between mb-1">
+                                  <span className="text-xs font-medium">{className}</span>
+                                  <span className="text-xs text-muted-foreground mono">
+                                    {(probability * 100).toFixed(2)}%
+                                  </span>
+                                </div>
+                                <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
+                                  <motion.div
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${probability * 100}%` }}
+                                    transition={{ duration: 0.5, delay: 0.1 }}
+                                    className="h-full bg-gradient-to-r from-primary to-accent rounded-full"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    </details>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </motion.div>
 

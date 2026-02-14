@@ -1,7 +1,11 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Eye, Search, Stethoscope, Sun, ShieldAlert, CircleDot, Scaling, Palette, Move, BookOpen, ChevronRight } from "lucide-react";
+import { Eye, Search, Stethoscope, Sun, ShieldAlert, CircleDot, Scaling, Palette, Move, BookOpen, ChevronRight, Activity, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { apiService } from "@/services/api.service";
+import type { Classification } from "@/types/api.types";
+import { API_CONFIG } from "@/config/api";
 
 const skinCancer101 = [
   { title: "What Is Skin Cancer?", desc: "Skin cancer is the abnormal growth of skin cells, most often caused by ultraviolet (UV) radiation from the sun or tanning beds." },
@@ -35,6 +39,18 @@ const prevention = [
 ];
 
 export default function Learn() {
+  const [classifications, setClassifications] = useState<Classification[]>([]);
+  const [loadingClassifications, setLoadingClassifications] = useState(true);
+
+  useEffect(() => {
+    apiService.getClassificationInfo()
+      .then((data) => setClassifications(data.classifications))
+      .catch(() => setClassifications([]))
+      .finally(() => setLoadingClassifications(false));
+  }, []);
+
+  const severityColors = API_CONFIG.SEVERITY_COLORS;
+
   return (
     <main className="pt-24 pb-16 min-h-screen relative">
       <div className="container mx-auto px-4 max-w-5xl">
@@ -184,6 +200,60 @@ export default function Learn() {
               </motion.div>
             ))}
           </div>
+        </section>
+
+        {/* What Our AI Detects */}
+        <section className="mb-24">
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="line-decoration mb-8"
+          >
+            <p className="text-xs uppercase tracking-[0.3em] text-primary mono mb-1 pt-5">AI Classifications</p>
+            <h2 className="text-2xl md:text-3xl font-bold font-display">What Our AI Detects</h2>
+          </motion.div>
+
+          {loadingClassifications ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              <span className="ml-2 text-muted-foreground text-sm">Loading classifications...</span>
+            </div>
+          ) : classifications.length > 0 ? (
+            <div className="grid sm:grid-cols-2 gap-4">
+              {classifications.map((cls, i) => {
+                const colors = severityColors[cls.severity] || severityColors.low;
+                return (
+                  <motion.div
+                    key={cls.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.06 }}
+                    className="rounded-xl surface-elevated border-glow p-5 group"
+                  >
+                    <div className="flex items-start gap-3 mb-3">
+                      <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center shrink-0 mt-0.5">
+                        <Activity className="h-4 w-4 text-accent-foreground" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold font-display text-sm mb-1">{cls.name}</h3>
+                        <span className={`inline-block text-[10px] uppercase tracking-wider font-medium px-2 py-0.5 rounded-full ${colors.bg} ${colors.text} ${colors.border} border`}>
+                          {cls.severity}
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-2">{cls.description}</p>
+                    <p className="text-xs text-primary/80">{cls.recommendation}</p>
+                  </motion.div>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-8">
+              Could not load classification data. Make sure the backend is running.
+            </p>
+          )}
         </section>
 
         {/* CTA */}

@@ -163,6 +163,7 @@
     );
     opacity: 0;
     transition: opacity 0.5s;
+    pointer-events: none;
   }
   .card-shine:hover::before {
     opacity: 1;
